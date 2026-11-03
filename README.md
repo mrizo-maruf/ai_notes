@@ -52,3 +52,28 @@ make clean
 Available environments: `definition`, `theorem`, `lemma`, `proposition`, `corollary`,
 `example`, `exercise`, `remark`, `note`, and boxes `keyidea`, `intuition`, `warning`.
 Python code goes in `lstlisting`.
+
+## Deep Learning: section 1.1
+
+[Recap of Logistic Regression](deep_learning/chapters/01_logreg_to_mlp/01_recap_of_logistic_regression.tex)
+contains first-principles derivations of log-odds, decision boundaries, Bernoulli
+likelihood, binary cross-entropy, gradients, and convexity; worked examples,
+cost-sensitive robot grasp decisions, and exercises with answers.
+
+- [Compiled course notes](deep_learning/main.pdf)
+- [NumPy implementation and figure generator](deep_learning/code/logreg_1_1.py)
+- [Synthetic experiment results](deep_learning/figures/logreg_1_1/results.json)
+
+The seven vector-PDF figures are committed, so `make dl` does not need Python.
+To regenerate them, install NumPy and Matplotlib in your Python environment and run:
+
+```bash
+python deep_learning/code/logreg_1_1.py
+make dl
+```
+
+The script uses seed 7, performs gradient/stability/curvature/descent checks, and
+writes figures plus `results.json` under `deep_learning/figures/logreg_1_1/`.
+The example is synthetic, not a measured robot benchmark. After rebuilding,
+`deep_learning/build/main.pdf` is the fresh PDF; the root-level course PDF is a
+committed snapshot.
