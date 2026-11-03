@@ -1,14 +1,14 @@
-\documentclass[11pt]{article}
+\documentclass[11pt]{report}
 
 \newcommand{\coursetitle}{Machine Learning}
 \input{../common/preamble}
 
 % ------------------------------------------------------------
-% Compile only some sections while working on them (faster).
-% Uncomment and list the files you want; the rest are skipped
+% Compile only some chapters while working on them (faster).
+% Uncomment and list the chapters you want; the rest are skipped
 % but numbering and cross-references are kept.
 % ------------------------------------------------------------
-% \includeonly{sections/01_introduction}
+% \includeonly{chapters/01_introduction}
 
 \title{\textbf{\coursetitle} \\ \large Lecture Notes}
 \author{Muxammadrizo Maribjonov}
@@ -18,18 +18,20 @@
 
 \maketitle
 \tableofcontents
-\newpage
 
-% ---------------- Sections (one file each) ----------------
-\include{sections/01_introduction}
-\include{sections/02_linear_regression}
-\include{sections/03_classification}
-\include{sections/04_model_selection}
-\include{sections/05_svm_kernels}
-\include{sections/06_trees_ensembles}
-\include{sections/07_clustering}
-\include{sections/08_dimensionality_reduction}
-\include{sections/09_probabilistic_models}
+% ---------------- Chapters (one file each) ----------------
+\include{chapters/01_introduction}
+\include{chapters/02_linear_methods}
+\include{chapters/03_principles_of_regularization}
+\include{chapters/04_support_vector_machines}
+\include{chapters/05_decision_trees}
+\include{chapters/06_neural_networks_1}
+\include{chapters/07_neural_networks_2}
+\include{chapters/08_ensembles}
+\include{chapters/09_gradient_boosted_trees}
+\include{chapters/10_hyper_parameter_tuning}
+\include{chapters/11_fighting_overfitting}
+\include{chapters/12_error_metrics}
 
 % ---------------- Bibliography ----------------
 \bibliographystyle{plainnat}

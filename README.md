@@ -1,7 +1,7 @@
 # AI Course Notes
 
 LaTeX notes for **Fundamentals of Deep Learning** and **Machine Learning**.
-Each section lives in its own file, so notes can be added one at a time.
+Each chapter has its own file, and each section within it its own file, so notes can be added one at a time.
 
 ## Layout
 
@@ -12,9 +12,13 @@ common/
   references.bib        # shared bibliography
   section_template.tex  # starting point for a new section
 deep_learning/
-  main.tex              # document root: title, TOC, list of \include{sections/...}
-  sections/NN_topic.tex # one file per section
-  figures/              # images for this course (\includegraphics{name.png})
+  main.tex                          # document root: title, TOC, \include{chapters/NN_chapter}
+  chapters/
+    01_logreg_to_mlp.tex            # \chapter{...} + \input of its sections
+    01_logreg_to_mlp/
+      01_recap_of_logistic_regression.tex   # one file per \section
+      ...
+  figures/                          # images for this course (\includegraphics{name.png})
 machine_learning/
   (same structure)
 ```
@@ -33,12 +37,16 @@ make clean
 
 ## Adding notes
 
-- **Fill an existing section:** edit `<course>/sections/NN_topic.tex`.
-- **New section:** copy `common/section_template.tex` to `<course>/sections/NN_topic.tex`
-  and add `\include{sections/NN_topic}` to that course's `main.tex` in the right place.
-- **Rename / reorder:** change the `\section{...}` title in the file and/or the order
-  of `\include` lines in `main.tex`. File numbers are only for sorting.
-- **Faster builds while writing:** uncomment `\includeonly{...}` in `main.tex`.
+- **Fill an existing section:** edit `<course>/chapters/NN_chapter/MM_topic.tex`.
+- **New section:** copy `common/section_template.tex` to `<course>/chapters/NN_chapter/MM_topic.tex`
+  and add `\input{chapters/NN_chapter/MM_topic}` to `<course>/chapters/NN_chapter.tex`.
+- **New chapter:** create `<course>/chapters/NN_chapter.tex` starting with `\chapter{Title}`
+  (plus a `NN_chapter/` folder for its sections) and add `\include{chapters/NN_chapter}`
+  to that course's `main.tex`.
+- **Rename / reorder:** change the `\chapter{...}` / `\section{...}` titles and/or the order
+  of `\include` / `\input` lines. File numbers are only for sorting.
+- **Faster builds while writing:** uncomment `\includeonly{...}` in `main.tex` to compile
+  only the chapters you list.
 - **Citations:** add entries to `common/references.bib`, cite with `\citet{key}` / `\citep{key}`.
 
 Available environments: `definition`, `theorem`, `lemma`, `proposition`, `corollary`,
