@@ -77,3 +77,24 @@ writes figures plus `results.json` under `deep_learning/figures/logreg_1_1/`.
 The example is synthetic, not a measured robot benchmark. After rebuilding,
 `deep_learning/build/main.pdf` is the fresh PDF; the root-level course PDF is a
 committed snapshot.
+
+## Deep Learning: section 1.2
+
+[Cross Entropy, KL Divergence, and Maximum Likelihood](deep_learning/chapters/01_logreg_to_mlp/02_cross_entropy_kl_divergence_and_maximum_likelihood.tex)
+derives surprise, entropy, coding bounds, cross-entropy, KL nonnegativity and
+asymmetry, empirical maximum likelihood, and conditional classification losses.
+It includes both lecture transfer questions, a Gaussian-mixture explanation of
+KL direction, continuous-density caveats, a robot semantic-perception example,
+and six exercises with worked answers.
+
+- [NumPy experiments and seven figure generators](deep_learning/code/information_1_2.py)
+- [Numerical results](deep_learning/figures/information_1_2/results.json)
+
+```bash
+python deep_learning/code/information_1_2.py
+make dl
+```
+
+Requires NumPy and Matplotlib. The figures are committed; running Python is
+optional for compiling the notes. Examples are constructed and the reverse-KL
+Gaussian fit is a numerical search, with a quadrature convergence check.

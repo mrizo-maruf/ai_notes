@@ -1,0 +1,22 @@
+{
+  "units": "nats unless field ends in bits",
+  "coding_entropy_bits": 1.75,
+  "coding_cross_entropies_bits": [
+    1.75,
+    2.0,
+    2.625
+  ],
+  "bernoulli_kl_08_05": 0.19274475702175747,
+  "bernoulli_kl_05_08": 0.2231435513142097,
+  "forward_gaussian_mean": 0.0,
+  "forward_gaussian_std": 3.0805843601498726,
+  "mixture_entropy": 1.7553836920253234,
+  "forward_kl_at_optimum": 0.7886741474902674,
+  "reverse_numerical_mean": -3.0,
+  "reverse_numerical_std": 0.7,
+  "reverse_kl": 0.6931201027593832,
+  "quadrature_difference": 7.813476088358584e-09,
+  "conditional_entropy": 0.7073440025026434,
+  "conditional_cross_entropy": 0.7644131375831811,
+  "conditional_kl": 0.05706913508053769
+}
