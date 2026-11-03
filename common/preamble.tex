@@ -1,0 +1,97 @@
+% ============================================================
+%  Shared preamble for all course notes
+%  Loaded from each course's main.tex via \input{../common/preamble}
+% ============================================================
+
+% ---------- Page layout & fonts ----------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[a4paper, margin=2.5cm]{geometry}
+\usepackage{parskip}               % space between paragraphs, no indent
+\usepackage{fancyhdr}
+
+% ---------- Math ----------
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+
+% ---------- Figures, tables, plots ----------
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes, calc, fit}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\graphicspath{{figures/}}
+
+% ---------- Lists, code, colored boxes ----------
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage[most]{tcolorbox}
+
+% ---------- References ----------
+\usepackage[numbers]{natbib}
+\usepackage[colorlinks=true, linkcolor=blue!60!black,
+            citecolor=green!50!black, urlcolor=blue!70!black]{hyperref}
+\usepackage[capitalise, noabbrev]{cleveref}   % must come after hyperref
+
+% ---------- Header / footer ----------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\nouppercase{\leftmark}}
+\fancyhead[R]{\coursetitle}
+\fancyfoot[C]{\thepage}
+\setlength{\headheight}{14.5pt}
+
+% ---------- Theorem-like environments ----------
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{exercise}{Exercise}[section]
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+\newtheorem*{note}{Note}
+
+% ---------- Highlight boxes ----------
+% \begin{keyidea} ... \end{keyidea}   -- main takeaway of a lecture
+% \begin{intuition} ... \end{intuition}
+\newtcolorbox{keyidea}[1][Key Idea]{
+  colback=blue!4, colframe=blue!50!black, fonttitle=\bfseries,
+  title=#1, breakable}
+\newtcolorbox{intuition}[1][Intuition]{
+  colback=green!4, colframe=green!40!black, fonttitle=\bfseries,
+  title=#1, breakable}
+\newtcolorbox{warning}[1][Caution]{
+  colback=red!4, colframe=red!50!black, fonttitle=\bfseries,
+  title=#1, breakable}
+
+% ---------- Code listings (Python by default) ----------
+\lstdefinestyle{notes}{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue!70!black}\bfseries,
+  commentstyle=\color{green!45!black}\itshape,
+  stringstyle=\color{red!60!black},
+  numbers=left, numberstyle=\tiny\color{gray},
+  frame=single, rulecolor=\color{gray!40},
+  backgroundcolor=\color{gray!5},
+  breaklines=true, showstringspaces=false, tabsize=4,
+  captionpos=b
+}
+\lstset{style=notes}
+
+% ---------- Shared math notation ----------
+\input{../common/macros}

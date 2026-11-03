@@ -1,0 +1,47 @@
+% ============================================================
+%  Shared math notation for ML / DL notes
+% ============================================================
+
+% ---------- Number sets ----------
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+
+% ---------- Probability ----------
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\Cov}{Cov}
+\newcommand{\KL}[2]{D_{\mathrm{KL}}\!\left(#1 \,\|\, #2\right)}
+\newcommand{\Normal}{\mathcal{N}}
+\newcommand{\iid}{\overset{\text{i.i.d.}}{\sim}}
+
+% ---------- Linear algebra ----------
+\renewcommand{\vec}[1]{\bm{#1}}          % vectors: \vec{x}
+\newcommand{\mat}[1]{\bm{#1}}            % matrices: \mat{W}
+\newcommand{\T}{^{\top}}                 % transpose: \vec{x}\T
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\diag}{diag}
+\DeclarePairedDelimiter{\norm}{\lVert}{\rVert}
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+\DeclarePairedDelimiter{\inner}{\langle}{\rangle}
+
+% ---------- Optimization / calculus ----------
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\newcommand{\grad}{\nabla}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+
+% ---------- ML-specific ----------
+\newcommand{\dataset}{\mathcal{D}}
+\newcommand{\loss}{\mathcal{L}}
+\newcommand{\hypo}{\mathcal{H}}
+\newcommand{\params}{\bm{\theta}}
+\newcommand{\X}{\mathcal{X}}
+\newcommand{\Y}{\mathcal{Y}}
+\newcommand{\indicator}[1]{\mathbb{1}\!\left[#1\right]}
+\DeclareMathOperator{\sigmoid}{\sigma}
+\DeclareMathOperator{\softmax}{softmax}
+\DeclareMathOperator{\ReLU}{ReLU}
+\DeclareMathOperator{\sign}{sign}

@@ -1,0 +1,40 @@
+\documentclass[11pt]{article}
+
+\newcommand{\coursetitle}{Machine Learning}
+\input{../common/preamble}
+
+% ------------------------------------------------------------
+% Compile only some sections while working on them (faster).
+% Uncomment and list the files you want; the rest are skipped
+% but numbering and cross-references are kept.
+% ------------------------------------------------------------
+% \includeonly{sections/01_introduction}
+
+\title{\textbf{\coursetitle} \\ \large Lecture Notes}
+\author{Muxammadrizo Maribjonov}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+% ---------------- Sections (one file each) ----------------
+\include{sections/01_introduction}
+\include{sections/02_linear_regression}
+\include{sections/03_classification}
+\include{sections/04_model_selection}
+\include{sections/05_svm_kernels}
+\include{sections/06_trees_ensembles}
+\include{sections/07_clustering}
+\include{sections/08_dimensionality_reduction}
+\include{sections/09_probabilistic_models}
+
+% ---------------- Bibliography ----------------
+\bibliographystyle{plainnat}
+% Course textbooks; remove once you cite things with \cite{...}
+\nocite{bishop2006pattern, hastie2009elements, murphy2022probabilistic}
+\bibliography{references}
+
+\end{document}

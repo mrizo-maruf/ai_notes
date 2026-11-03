@@ -1,0 +1,40 @@
+\documentclass[11pt]{article}
+
+\newcommand{\coursetitle}{Fundamentals of Deep Learning}
+\input{../common/preamble}
+
+% ------------------------------------------------------------
+% Compile only some sections while working on them (faster).
+% Uncomment and list the files you want; the rest are skipped
+% but numbering and cross-references are kept.
+% ------------------------------------------------------------
+% \includeonly{sections/01_introduction}
+
+\title{\textbf{\coursetitle} \\ \large Lecture Notes}
+\author{Muxammadrizo Maribjonov}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+% ---------------- Sections (one file each) ----------------
+\include{sections/01_introduction}
+\include{sections/02_neural_networks}
+\include{sections/03_backpropagation}
+\include{sections/04_optimization}
+\include{sections/05_regularization}
+\include{sections/06_cnn}
+\include{sections/07_rnn}
+\include{sections/08_transformers}
+\include{sections/09_generative_models}
+
+% ---------------- Bibliography ----------------
+\bibliographystyle{plainnat}
+% Course textbooks; remove once you cite things with \cite{...}
+\nocite{goodfellow2016deep}
+\bibliography{references}
+
+\end{document}
