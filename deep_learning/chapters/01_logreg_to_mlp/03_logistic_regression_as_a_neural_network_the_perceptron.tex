@@ -4,4 +4,150 @@
 \section{Logistic Regression as a Neural Network: The Perceptron}
 \label{sec:logreg_to_mlp:logistic_regression_as_a_neural_network_the_perceptron}
 
-% Notes go here.
+\subsection{One model, two ways of seeing it}
+Logistic regression asks for the probability of a binary outcome given measured features. A neural-network diagram exposes the computations that produce that probability. It does not, by itself, introduce a different statistical model.
+For $\mathbf{x}\in\mathbb{R}^d$, weights $\mathbf{w}\in\mathbb{R}^d$, and bias $b\in\mathbb{R}$,
+\begin{align}
+ z &= \mathbf{w}^{\mathsf T}\mathbf{x}+b
+    = \sum_{j=1}^d w_jx_j+b,\\
+ p &= \sigma(z)=\frac{1}{1+e^{-z}}.
+\end{align}
+The score $z$ is called the \emph{pre-activation} or \emph{logit}; $p$ is the activation and the model's estimate of $P(Y=1\mid\mathbf{x})$. The bias is the same quantity denoted $w_0$ in the preceding sections. The first operation is technically \emph{affine}, since the bias allows a nonzero output at zero input.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, every node/.style={font=\small}]
+\node[draw,circle] (x1) at (0,1) {$x_1$};
+\node[draw,circle] (x2) at (0,0) {$x_2$};
+\node[draw,circle] (xd) at (0,-1) {$x_d$};
+\node[draw,rounded corners,align=center] (z) at (3,0) {Weighted sum\\$z=\sum_jw_jx_j+b$};
+\node[draw,rounded corners,align=center] (p) at (6,0) {Sigmoid\\$p=\sigma(z)$};
+\node[draw,rounded corners,align=center] (l) at (9,0) {Loss\\$\ell(p,y)$};
+\node (b) at (3,1.3) {bias $b$};
+\node (y) at (9,1.3) {observed label $y$};
+\draw[->] (x1)--node[above] {$w_1$}(z);
+\draw[->] (x2)--node[above] {$w_2$}(z);
+\draw[->] (xd)--node[below] {$w_d$}(z);
+\draw[->] (b)--(z); \draw[->] (z)--(p);
+\draw[->] (p)--(l); \draw[->] (y)--(l);
+\end{tikzpicture}
+\caption{A sigmoid neuron and its training loss. The label enters the loss computation, not the prediction. Intermediate inputs are omitted when $d>3$.}
+\end{figure}
+
+Why can $z$ be interpreted as accumulated evidence? From the sigmoid,
+\[
+ 1-p=\frac{e^{-z}}{1+e^{-z}},\qquad
+ \frac{p}{1-p}=e^z,\qquad
+ \log\frac{p}{1-p}=z=b+\sum_jw_jx_j.
+\]
+Thus an increase $\Delta$ in feature $x_j$, with all other features fixed, changes log-odds by $w_j\Delta$ and multiplies odds by $e^{w_j\Delta}$. The sigmoid translates this additive evidence into a number between zero and one. This is a modeling assumption about conditional log-odds, not a theorem that every classification problem has this structure.
+
+\begin{warning}[What does ``perceptron'' mean here?]
+The classical perceptron uses a hard threshold, $\hat y=\mathbf{1}\{z\geq0\}$, and its classical learning rule differs from logistic regression training. The lecture diagram uses the term for a sigmoid neuron. Logistic regression is exactly this sigmoid neuron trained with binary cross-entropy. Hard threshold outputs are not suitable probability estimates for this loss: a confidently wrong prediction gives infinite negative log-likelihood, and the threshold is not differentiable at zero and has zero derivative elsewhere.
+\end{warning}
+
+At the usual probability threshold $1/2$, sigmoid monotonicity implies
+\[
+ p\geq\tfrac12\ \Longleftrightarrow\ z\geq0.
+\]
+The decision boundary remains $\mathbf{w}^{\mathsf T}\mathbf{x}+b=0$. A nonlinear output activation therefore does not automatically create a nonlinear decision boundary in the original input features. Hidden nonlinear features, introduced in later sections, can change that geometry.
+
+\subsection{A complete numerical forward pass}
+Consider an illustrative grasp-success model using standardized contact-quality and pose-error features. Set
+\[
+ \mathbf{x}=\begin{bmatrix}1.2\\0.5\end{bmatrix},\qquad
+ \mathbf{w}=\begin{bmatrix}2\\-1.5\end{bmatrix},\qquad b=-0.4.
+\]
+The signs encode the model's assumptions: better contact increases predicted success, while larger pose error reduces it. These are illustrative weights, not a validated robot controller. Compute
+\[
+ z=2(1.2)-1.5(0.5)-0.4=1.25,\qquad p=\sigma(1.25)\approx0.7773.
+\]
+If the grasp succeeds ($y=1$), its loss is $-\log p\approx0.2519$ nats. If it fails ($y=0$), the same prediction incurs $-\log(1-p)\approx1.5019$ nats. The forward prediction is identical in both cases; the observed outcome determines how it is scored.
+
+\subsection{Computational complexity: count the forward-pass work}
+Assume a dense dataset with $N$ examples and $d\geq1$ features, and fixed-precision arithmetic where a scalar arithmetic operation, exponential, or logarithm has constant cost in $N$ and $d$. For one example, computing $z$ uses $d$ multiplications, $d-1$ additions to sum the products, and one bias addition. This is $\Theta(d)$ work. The sigmoid then operates on one scalar, so it costs $\Theta(1)$. Binary cross-entropy also uses only a fixed number of scalar operations:
+\[
+ \ell(p,y)=-y\log p-(1-y)\log(1-p).
+\]
+Repeating for all examples and averaging gives
+\[
+ J(\mathbf{w},b)=\frac1N\sum_{n=1}^N\ell(p_n,y_n).
+\]
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Operation & One example & Entire dataset\\
+\midrule
+Weighted sum and bias & $\Theta(d)$ & $\Theta(Nd)$\\
+Sigmoid activation & $\Theta(1)$ & $\Theta(N)$\\
+Per-example cross-entropy & $\Theta(1)$ & $\Theta(N)$\\
+Sum and average losses & --- & $\Theta(N)$\\
+\bottomrule
+\end{tabular}
+\end{center}
+Consequently,
+\[
+ \boxed{\Theta(Nd+N)=\Theta(Nd),\quad\text{hence }O(Nd).}
+\]
+The weighted sums dominate because every example must combine all $d$ input features. If both $N$ and $d$ double, the dominant work increases by a factor of four. For example, $N=10{,}000$ and $d=100$ require $10^6$ weighted feature products; doubling both requires $4\times10^6$.
+
+\subsection{The same argument as a matrix multiplication}
+Store examples as rows:
+\[
+ X=\begin{bmatrix}\mathbf{x}_1^{\mathsf T}\\\vdots\\\mathbf{x}_N^{\mathsf T}\end{bmatrix}
+ \in\mathbb{R}^{N\times d},\quad
+ \mathbf{w}\in\mathbb{R}^{d},\quad
+ \mathbf{z}=X\mathbf{w}+b\mathbf{1}\in\mathbb{R}^{N}.
+\]
+Matrix--vector multiplication computes $N$ dot products, each of length $d$: $\Theta(Nd)$. Applying sigmoid elementwise produces $\mathbf{p}\in\mathbb{R}^N$ in $\Theta(N)$ time, followed by $\Theta(N)$ loss evaluation and reduction. Vectorization can improve execution speed through optimized numerical kernels; it does not remove the $Nd$ arithmetic dependence.
+
+\begin{keyidea}[What exactly is being counted?]
+Starting from inputs and weights, computing the full loss costs $O(Nd)$. If probabilities are already available, computing cross-entropy alone costs $O(N)$. This is the cost of one evaluation, not the whole optimization process. A mini-batch of $B$ examples costs $O(Bd)$. Sparse matrix--vector multiplication can reduce the full forward-pass cost to $O(\operatorname{nnz}(X)+N)$, where $\operatorname{nnz}(X)$ counts stored nonzero entries.
+\end{keyidea}
+
+\subsection{A stable NumPy implementation}
+Directly taking logarithms of computed probabilities can fail when floating-point sigmoid outputs round to zero or one. Substitute $p=\sigma(z)$ into the loss instead:
+\begin{align}
+ \log p &= z-\log(1+e^z),\\
+ \log(1-p)&=-\log(1+e^z),\\
+ \ell(z,y)&=\log(1+e^z)-yz.
+\end{align}
+For binary $y$, an equivalent expression is
+\[
+ \ell(z,y)=\log\bigl(1+e^{(1-2y)z}\bigr).
+\]
+Evaluate it using \texttt{np.logaddexp}, which avoids forming an overflowing exponential. This form also avoids subtracting two large nearly equal terms for a confident correct prediction.
+\begin{lstlisting}
+import numpy as np
+
+def binary_neuron_loss(X, y, w, b):
+    # X: (N, d); y: (N,), binary; w: (d,); b: scalar
+    z = X @ w + b                      # O(Nd)
+    signed_logits = (1.0 - 2.0*y) * z  # O(N)
+    losses = np.logaddexp(0.0, signed_logits)  # O(N)
+    return losses.mean()              # O(N)
+
+X = np.array([[1.2, 0.5]])
+w = np.array([2.0, -1.5])
+assert np.isclose(binary_neuron_loss(X, np.array([1.]),
+                                  w, -0.4), 0.2519290813)
+assert np.isclose(binary_neuron_loss(X, np.array([0.]),
+                                  w, -0.4), 1.5019290813)
+\end{lstlisting}
+Materializing logits and losses uses $O(N)$ additional memory beyond the dataset and parameters. Processing one example at a time permits a running sum with constant extra workspace beyond the current input and weights; mini-batches trade memory against throughput.
+
+\subsection{Connection to learning and the next layer}
+The chain rule gives a particularly simple error signal:
+\[
+ \frac{\partial\ell}{\partial p}=\frac{p-y}{p(1-p)},\qquad
+ \frac{\partial p}{\partial z}=p(1-p),\qquad
+ \frac{\partial\ell}{\partial z}=p-y.
+\]
+These identities hold for finite logits, hence $0<p<1$. Since $\partial z/\partial w_j=x_j$ and $\partial z/\partial b=1$,
+\[
+ \nabla_{\mathbf{w}}J=\frac1N X^{\mathsf T}(\mathbf{p}-\mathbf{y}),\qquad
+ \frac{\partial J}{\partial b}=\frac1N\sum_n(p_n-y_n).
+\]
+The gradient also costs $O(Nd)$. Thus a full-batch gradient step, including its forward pass, has the same asymptotic order; $T$ such steps cost $O(TNd)$. Convergence determines the required $T$ and is a separate question.
+
+A single sigmoid neuron learns one affine score. Placing several neurons in a hidden layer lets the model construct several features and combine them. If there are $h$ hidden neurons, their dense forward computation is $XW+\mathbf{1}\mathbf{b}^{\mathsf T}$ with $W\in\mathbb{R}^{d\times h}$, costing $O(Ndh)$. This explains both the computational growth and the next conceptual step toward a multilayer perceptron.
