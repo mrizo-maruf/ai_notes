@@ -98,3 +98,24 @@ make dl
 Requires NumPy and Matplotlib. The figures are committed; running Python is
 optional for compiling the notes. Examples are constructed and the reverse-KL
 Gaussian fit is a numerical search, with a quadrature convergence check.
+
+## Deep Learning: sections 1.4 and 1.5
+
+[Multilayer Perceptrons](deep_learning/chapters/01_logreg_to_mlp/04_multilayer_perceptrons.tex)
+and [Matrix Dimensions](deep_learning/chapters/01_logreg_to_mlp/05_matrix_dimensions.tex)
+derive hidden representations, the necessity of nonlinear activations, column-to-row
+batch notation, broadcasting, and forward-pass time and memory costs. They include
+all supplied lecture questions, a constructive XOR solution, a grasp-model resource
+budget, and explicit distinctions between cached activations and inference buffers.
+
+- [NumPy companion and four figure generators](deep_learning/code/mlp_1_4_1_5.py)
+- [Checked numerical results](deep_learning/figures/mlp_1_4_1_5/results.json)
+
+```bash
+python deep_learning/code/mlp_1_4_1_5.py
+make dl
+```
+
+The script checks scalar/vectorized and row/column equivalence, batch independence,
+affine collapse, XOR predictions, and parameter/cache counts. Memory figures are
+analytic array-element budgets, not measured runtime memory.

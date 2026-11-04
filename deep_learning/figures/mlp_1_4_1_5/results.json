@@ -1,0 +1,31 @@
+{
+  "checks": "passed: scalar/vectorized, column/row, bias, batch independence, affine collapse, XOR, shapes, memory counts",
+  "xor_probabilities": [
+    0.006692850924284855,
+    0.9933071490757152,
+    0.9933071490757152,
+    0.006692850924284855
+  ],
+  "worked_matrix_output": [
+    [
+      5.5,
+      2.5
+    ],
+    [
+      3.5,
+      -2.5
+    ]
+  ],
+  "robot_single": {
+    "weight_products": 912,
+    "parameters": 961,
+    "all_cached_scalars": 1071,
+    "inference_scalars": 1037
+  },
+  "robot_batch": {
+    "weight_products": 233472,
+    "parameters": 961,
+    "all_cached_scalars": 29121,
+    "inference_scalars": 20417
+  }
+}
