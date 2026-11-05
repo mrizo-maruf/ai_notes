@@ -119,3 +119,26 @@ make dl
 The script checks scalar/vectorized and row/column equivalence, batch independence,
 affine collapse, XOR predictions, and parameter/cache counts. Memory figures are
 analytic array-element budgets, not measured runtime memory.
+
+## Machine Learning: Chapter 3, first instalment
+
+[Principles of Regularization](machine_learning/chapters/03_principles_of_regularization.tex)
+now covers polynomial fitting, underfitting/overfitting, and the squared-loss
+bias–variance decomposition. It includes a source map for the 14 supplied slide
+screenshots, conditional-expectation clarifications, both cross-term cancellations,
+worked examples, independent exercises, hints, solutions, and delayed review.
+Regularization methods await the next lecture material.
+
+- [Compiled ML reader](machine_learning/main.pdf)
+- [NumPy experiment and figure generator](machine_learning/code/bias_variance.py)
+- [Executed experiment results](machine_learning/figures/bias_variance/results.json)
+
+```bash
+python machine_learning/code/bias_variance.py
+make ml
+```
+
+Figures are committed; Python is optional for building the reader. The experiment
+uses fixed training inputs and repeated independent label noise, explicitly distinguished
+from the slides' random-design experiment. Existing shared typography is preserved
+(11 pt Latin Modern); it is not a Times New Roman export.

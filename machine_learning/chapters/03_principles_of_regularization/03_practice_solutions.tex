@@ -1,0 +1,91 @@
+\section*{Essential practice}
+Complete these before consulting the hints. The short attempts A1--A6 in the text are also part of the practice sequence.
+\begin{enumerate}[label=E\arabic*.,leftmargin=*]
+\item \textbf{[O1, standard; nested models]} Prove that the optimal training MSE cannot increase from degree $M$ to $M+1$. Name two reasons an actual program might report an increase despite this theorem. State when $N$ arbitrary labels can be interpolated with degree at most $N-1$.
+\item \textbf{[O3--O4, standard; reconstruct]} Close the derivation. Starting with $F-Y$, insert both $a=\E_{\mathcal D}F$ and $m=\E[Y\mid x]$, expand the resulting three-term square, and justify why each of the three cross terms vanishes. Specify what is fixed and which independence condition you use.
+\item \textbf{[O5, standard; changed distribution]} At input $u$, bias is $-2$, prediction variance is $1$, and noise variance is $0.5$. At input $v$, these quantities are $1$, $4$, and $2$. Test inputs have probabilities $1/4$ and $3/4$. Compute total expected test MSE and each integrated component. Compare mean squared bias with squared mean bias.
+\item \textbf{[O2--O3, standard; find the first invalid step]} A student writes: ``For every fixed $\theta$, training MSE is unbiased for risk. Therefore training MSE at the training-selected $\hat\theta$ is unbiased for $R(\hat\theta)$. I choose degree using the lowest test error over 100 trials and report that same test error.'' Identify both statistical problems. Propose an evaluation procedure.
+\item \textbf{[O2--O5, integrative]} A simulated robot predicts a scalar grasp-position correction in centimetres from one sensor feature. At one safety-critical input the true mean is $2$ cm and conditional noise variance is $0.25$ cm$^2$. Three equally likely training outcomes produce predictions $(1.8,2.0,2.2)$ for procedure A and $(1.0,2.5,4.0)$ for B. Their training MSEs are $0.12$ and $0.01$ cm$^2$. Calculate expected fresh-label MSE for each procedure at this input, choose the better one under squared loss, and explain why training MSE gives a different ranking. Then suppose an independent test set has 90\% of inputs in an easy region and 10\% in a difficult region. A's conditional MSEs are $(0.10,1.00)$; B's are $(0.05,2.00)$. Choose by deployment-average MSE. Would that criterion alone suffice if errors in the difficult region have a strict safety tolerance? A satisfactory answer includes calculations, units, and a limitation of the decision criterion.
+\item \textbf{[O3--O5, implementation]} Implement A6 without copying the reference code. Verify the finite-replicate identity pointwise, then compare against independently sampled noisy test labels. Increase test-noise repetitions and explain why discrepancies should typically shrink. Explain why changing the variance divisor to $B-1$ spoils the exact finite-array identity.
+\end{enumerate}
+\paragraph{Optional challenge [O4--O5].} Suppose the observation contains two features $X,Z$, but prediction initially uses only $X$. Use the conditional variance identity to explain why the average irreducible squared error cannot increase when $Z$ is also available. Does this guarantee that a finite-data fitted model using both features has lower test error?
+
+\subsection*{Delayed review: attempt a few days later}
+\begin{enumerate}[label=R\arabic*.]
+\item The mean target is $-1$, noise variance is $0.4$, and equally likely retrained predictions are $-2,0$. Calculate expected test MSE without rereading the derivation.
+\item A model always predicts zero, regardless of its training data. Which component must be zero? Which components can remain positive?
+\item Explain to a colleague why $\E_X[b(X)^2]$ and $(\E_X[b(X)])^2$ answer different questions. Invent a two-input example.
+\item You double the training-set size. Which term is determined solely by the data distribution and available features? Must the other two terms both decrease?
+\end{enumerate}
+
+\section*{Hints}
+These are deliberately separated from the teaching text. Try the first hint before using the second.
+\begin{description}[style=nextline]
+\item[A1--A2] First: write down the new sample mean and compare the two losses separately. Next: symmetry keeps the affine slope simple; a small generalization gap can occur for a poor model.
+\item[A3--A4] First: name the variable being redrawn. Next: if the test label helped train the predictor, averaging over datasets conditional on that label need not give $\bar f(x)$.
+\item[A5--A6] First: deviations from a translated mean are unchanged. Next: predictions are rows indexed by retraining, so average along the row index while keeping each column's input fixed.
+\item[E1] First: embed one coefficient vector in the larger space. Next: append a zero coefficient and compare feasible objective values.
+\item[E2] First: use $(F-a)+(a-m)+(m-Y)$. Next: $\E_{\mathcal D}(F-a)=0$ and $\E_{Y\mid x}(m-Y)=0$; condition before factoring the remaining product.
+\item[E3] First: square the signed biases before averaging. Next: use the stated input probabilities for every component.
+\item[E4] First: ask whether the predictor is independent of the sample whose losses are averaged. Next: model selection itself uses information.
+\item[E5] First: compute the mean and spread of each prediction triple. Next: the deployment mixture weights are not equal.
+\item[E6] First: expand $P_{rg}-m_g=(P_{rg}-\hat a_g)+(\hat a_g-m_g)$. Next: deviations from their finite-sample mean sum to zero exactly.
+\item[Optional challenge] Start with $\Var(Y\mid X)=\E[\Var(Y\mid X,Z)\mid X]+\Var(\E[Y\mid X,Z]\mid X)$.
+\end{description}
+
+\section*{Solutions and checks}
+\subsection*{Prerequisite diagnostic}
+\textbf{D1.} $(a+b)^2=a^2+2ab+b^2$. Zero mean alone is insufficient: if $B=A$ and $A$ takes $-1,1$ equally often, $\E[A]=0$ but $\E[AB]=1$. \textbf{D2.} $\E[Z]=2.5$, $\E[Z^2]=7$, hence $\Var(Z)=7-2.5^2=0.75$. \textbf{D3.} $\Phi$ is $10\times4$, $\theta$ is $4\times1$, predictions are $10\times1$. \textbf{D4.} Yes: new inputs and labels cause new losses even though the coefficients remain fixed.
+
+\subsection*{Attempts embedded in the text}
+\textbf{A1.} The new labels are $(1,1,2)$. The constant becomes $4/3$; the affine fit becomes $4/3+x/2$. The interpolating quadratic is $1+x/2+x^2/2$. At $x=0$, constant and affine predictions each move by $1/3$, whereas the quadratic moves by $1$. This measures sensitivity to this particular perturbation, not variance over a specified distribution of datasets.
+
+\textbf{A2.} The first is a candidate for underfitting relative to the much better second model, the second for useful generalization, and the third for overfitting. Noise and split differences must still be checked. No pair of train/test MSEs uniquely identifies the three decomposition components. Repeated training and information about the conditional target are needed for a direct decomposition.
+
+\textbf{A3.} With $x$ and the dataset fixed, fresh-label sampling changes only $Y$. With $x$ and a chosen label fixed, retraining changes only $\hat f(x;\mathcal D)$. Both bars are theoretical averages under fixed distributions and a specified procedure. The error of one fitted model contains a particular dataset deviation as well as any systematic bias and label noise.
+
+\textbf{A4.} If $Y$ is a training label, $\E_{\mathcal D}[F-a\mid x,Y]$ need not be zero: knowing that label changes which fitted predictors are likely. One cannot replace it by the unconditional dataset mean $\E_{\mathcal D}[F-a]$. This is why the decomposition here evaluates fresh test error.
+
+\textbf{A5.} Deviations from the new mean $3$ are still $-1,0,1$, so variance stays $2/3$. Bias squared becomes $1$, and expected squared error is $1+2/3+1/4=23/12$. Translation changes location but not spread.
+
+\textbf{A6.} Average the $B$ rows to obtain one mean prediction for each of the $G$ inputs. The degree-0 fit is expected to miss the sine shape; the degree-9 fit is expected to be more noise-sensitive than degree 3. A single prediction curve's variation with $x$ mixes legitimate signal structure with errors; it cannot measure variation due to retraining at a fixed input. See the executed companion experiment for this setup's actual estimates.
+
+\subsection*{Essential exercises}
+\textbf{E1.} If $\theta$ is feasible at degree $M$, $(\theta^\top,0)^\top$ is feasible at degree $M+1$ and produces identical training predictions. Minimizing over a superset cannot increase the minimum. Finite precision, poor conditioning, or an incomplete optimizer can break the observed monotonicity. Changing the sample, objective, or constraints also invalidates the comparison. With distinct scalar inputs, the square degree-$(N-1)$ Vandermonde matrix is invertible and any labels have a unique interpolating polynomial of degree at most $N-1$. Repeated inputs with conflicting labels cannot be interpolated by a function.
+
+\textbf{E2.} Write $A=F-a$, $B=a-m$, $C=m-Y$. Then $B$ is constant at $x$, $\E A=0$, $\E C=0$. Consequently $\E[AB]=B\E A=0$ and $\E[BC]=B\E C=0$. Independence of the training data and the fresh conditional label gives $\E[AC]=\E A\E C=0$ at this fixed input. The squares are $\E A^2=v(x)$, $B^2=b(x)^2$, $\E C^2=\sigma^2(x)$. This is the same result as the two-stage derivation, with all three cross terms exposed.
+
+\textbf{E3.} At $u$ the error is $4+1+0.5=5.5$; at $v$ it is $1+4+2=7$. Weighted components are $1.75$ (bias squared), $3.25$ (variance), and $1.625$ (noise). Total $=6.625$, agreeing with $5.5/4+3(7)/4$. The mean signed bias is $(-2)/4+3/4=0.25$, whose square is $0.0625$, not $1.75$. Squaring after averaging conceals opposing errors.
+
+\textbf{E4.} The first invalid step substitutes a data-dependent fitted parameter into a statement about a predictor fixed independently of that data. Optimizing on the same sample creates dependence and generally optimism. The second problem is selection on the alleged test set; its winning error is no longer an untouched final evaluation. Use training data for fitting, a validation set or cross-validation for choosing the whole procedure, and fresh held-out test data for final reporting. Preprocessing learned from data must also be fitted within the training portion of each split.
+
+\textbf{E5.} A has mean $2$, zero bias, and variance $(0.04+0+0.04)/3=2/75\approx0.026667$ cm$^2$. Expected test MSE is $83/300\approx0.276667$ cm$^2$. B has mean $2.5$, squared bias $0.25$, and variance $(2.25+0+2.25)/3=1.5$ cm$^2$. Its expected test MSE is $2$ cm$^2$. Choose A at this input. B's lower training MSE does not compensate for its large retraining variability on fresh data. For the regional mixture, A has $0.9(0.10)+0.1(1.00)=0.19$ cm$^2$; B has $0.9(0.05)+0.1(2.00)=0.245$ cm$^2$. Choose A by average MSE. A safety requirement also needs region-specific and possibly tail-error criteria: even A may fail an unspecified tolerance. The exercise does not supply enough information to certify safety.
+
+\textbf{E6.} The reference below implements the experiment and asserts its algebraic identity. Independent test noise creates random finite-sample cross terms; they average toward zero as independent repetitions increase, without guaranteeing monotonic improvement in every realized run. The $B-1$ divisor estimates a population variance with a correction, whereas the exact finite-array decomposition uses the empirical distribution assigning mass $1/B$ to each prediction. Mixing these definitions breaks the identity. Monte Carlo estimates of bias squared are also not automatically unbiased population estimates.
+
+\paragraph{Reference implementation.} This script was executed for the figures and table. It uses only NumPy, Matplotlib, and Python's standard library. Run from the repository root with \texttt{python machine\_learning/code/bias\_variance.py}. Numerical assertions check the decomposition, direct enumeration of the worked example, and training-error monotonicity for nested least-squares models. The JSON output records the seed, experiment design, and realized errors.
+\lstinputlisting[basicstyle=\ttfamily\scriptsize]{code/bias_variance.py}
+
+\paragraph{Optional challenge solution.}
+Averaging the conditional variance identity over $X$ gives
+\[
+\E[\Var(Y\mid X)]-\E[\Var(Y\mid X,Z)]
+=\E[\Var(\E[Y\mid X,Z]\mid X)]\geq0.
+\]
+The Bayes noise floor cannot rise with more information. A finite-sample learner can still get worse through estimation variance, unsuitable modeling, or optimization; a lower attainable floor is not a guarantee that a particular method reaches it.
+
+\subsection*{Delayed-review solutions}
+\textbf{R1.} Mean prediction $-1$ gives zero bias; prediction variance is $1$, so total MSE $1.4$. \textbf{R2.} Dataset-induced prediction variance is zero. Bias squared and label noise can both be positive. \textbf{R3.} For two equally likely inputs with biases $-1,+1$, mean squared bias is $1$ while squared mean bias is $0$: opposite errors cancel only in the latter. \textbf{R4.} Conditional noise variance is unchanged if the distribution and features are unchanged. Bias and prediction variance can change; neither is universally guaranteed to decrease for every learning procedure.
+
+\section*{Self-assessment}
+For each objective, record \emph{followed}, \emph{completed with a hint}, \emph{justified independently}, or \emph{adapted to a changed problem}. Record the date and repeat a changed task later; reading once is not evidence of independent performance.
+\begin{center}\small
+\begin{tabular}{p{.12\linewidth}p{.78\linewidth}}
+\toprule Objective & Observable evidence\\\midrule
+O1 & Rebuild $\Phi$ and the normal equations; solve A1 and prove E1 without notes.\\
+O2 & Diagnose A2, explain two alternative causes, and repair the evaluation in E4.\\
+O3 & Explain A3 and A4 aloud, naming what is fixed in each expectation.\\
+O4 & Derive E2 on a blank page, including every cross-term justification.\\
+O5 & Solve E3 and E5, then implement E6 and explain its fixed-design limitation.\\\bottomrule
+\end{tabular}
+\end{center}

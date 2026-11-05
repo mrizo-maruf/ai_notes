@@ -1,0 +1,37 @@
+{
+  "seed": 17,
+  "repetitions": 400,
+  "N": 12,
+  "sigma": 0.15,
+  "design": "fixed equally spaced inputs; fresh independent label noise",
+  "evaluation": "mean over 201 uniform grid locations",
+  "results": [
+    {
+      "degree": 0,
+      "train": 0.4760938699586804,
+      "bias2": 0.4975251238714065,
+      "variance": 0.0019250098506300268,
+      "noise": 0.0225,
+      "expected": 0.5219501337220366,
+      "noisy_test": 0.5220339206000961
+    },
+    {
+      "degree": 3,
+      "train": 0.02136274540624969,
+      "bias2": 0.005953448329039769,
+      "variance": 0.00645108561794014,
+      "noise": 0.0225,
+      "expected": 0.034904533946979906,
+      "noisy_test": 0.03488954373851078
+    },
+    {
+      "degree": 9,
+      "train": 0.003811699132657443,
+      "bias2": 0.00013734954276882336,
+      "variance": 0.029456838219942338,
+      "noise": 0.0225,
+      "expected": 0.052094187762711165,
+      "noisy_test": 0.05201788222562611
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+\noindent\textbf{Scope: first instalment.} This chapter currently covers overfitting, underfitting, and the bias--variance decomposition for squared-error regression. Regularization methods are reserved for the next instalment. The central problem is simple: minimizing the errors we can observe does not necessarily minimize the errors we will make on new observations. We first see this in polynomial fitting, then separate the causes of expected test error mathematically.
+
+\paragraph{Source map.} The supplied screenshots have no original page numbers. S1--S14 below are \emph{local identifiers in their supplied order}, not invented lecture slide numbers. References such as [S5] refer to this map. The user's accompanying lecture text is denoted T.
+\begin{center}\small
+\begin{tabular}{p{.10\linewidth}p{.51\linewidth}p{.28\linewidth}}
+\toprule Source & Supplied topic & Reader location\\\midrule
+T, S1 & Sine curve, polynomial regression, model degree, generalization & Section~\ref{sec:reg:fit}\\
+S2--S3 & Expected value; properties of expectation & Section~\ref{sec:reg:expect}\\
+S4--S6 & Expected target, fitted model, test risk, random datasets & Section~\ref{sec:reg:random}\\
+S7--S8 & Mean prediction across datasets; expected test error & Section~\ref{sec:reg:random}\\
+S9--S12 & Bias--variance tradeoff I, II, III, Finale & Section~\ref{sec:reg:proof}\\
+S13--S14 & Darts; fixed versus learned models across datasets & Section~\ref{sec:reg:interpret}\\\bottomrule
+\end{tabular}
+\end{center}
+The probability refresher, numerical examples, experiments, and practice are added teaching material. Validation-set discipline and the conditional-mean optimality proof are supporting explanations. The uncorrelated-but-dependent counterexample is optional depth. No external sources were consulted; figures below are newly computed examples, not reconstructions of undisclosed slide data.
+
+\paragraph{Destination.} After studying and practising this instalment, you should be able to:
+\begin{enumerate}[label=O\arabic*.,leftmargin=*]
+\item Fit and interpret polynomial regression, tracking dimensions and model complexity.
+\item Diagnose plausible underfitting and overfitting from error measurements, while identifying what those measurements cannot prove.
+\item Distinguish a fixed fitted predictor from a learning procedure evaluated across random datasets.
+\item Reconstruct both cross-term cancellations and derive pointwise and population bias--variance decompositions.
+\item Calculate and interpret bias squared, prediction variance, and conditional noise; verify their relationship computationally.
+\end{enumerate}
+\paragraph{Prerequisite diagnostic (answers at the end).} Assume basic sums, integrals, vectors, and least squares; no earlier reader chapter is presumed complete.
+\begin{enumerate}[label=D\arabic*.]
+\item Expand $(a+b)^2$. If $\E[A]=0$, is $\E[AB]=0$ automatic?
+\item A variable takes values $1,3$ with probabilities $1/4,3/4$. Find its mean and variance.
+\item A cubic model is fitted to ten scalar inputs. What are the dimensions of its design matrix, coefficient vector, and prediction vector?
+\item If a trained model's parameters are frozen, can its test loss still be random? Explain the source of randomness.
+\end{enumerate}
