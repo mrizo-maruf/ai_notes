@@ -1,7 +1,128 @@
-% ============================================================
-%  1.7 Representational Power of MLPs
-% ============================================================
 \section{Representational Power of MLPs}
 \label{sec:logreg_to_mlp:representational_power_of_mlps}
 
-% Notes go here.
+\subsection{Separate three questions that are often mixed together}
+\emph{Representation} asks whether some parameters can express or approximate a target function. \emph{Optimization} asks whether a training procedure finds suitable parameters. \emph{Generalization} asks how the resulting function performs on unseen data. A theorem about the first question does not automatically answer the other two.
+
+A sigmoid or threshold perceptron without hidden features uses one affine score. Its binary decision boundary is a hyperplane in the given feature space. XOR fails the inequalities derived in Section 1.4, regardless of how long the perceptron is trained. An identity-output model without hidden layers is affine regression. A softmax linear classifier has pairwise boundaries $z_i=z_j$, hence affine boundaries; the same distinction between logits and probabilities applies.
+
+The limitation depends on the representation supplied to the model. A linear classifier on manually constructed nonlinear features can have a nonlinear boundary in the raw inputs. Thus ``only linearly separable functions'' means separability in the model's input feature coordinates, not in every possible re-encoding.
+
+\subsection{Any Boolean function on a finite cube: an explicit construction}
+Let $f:\{0,1\}^d\to\{0,1\}$ be an arbitrary truth table. For each binary vector $v$ whose label is one, define the number of matching bits
+\[
+ s_v(x)=\sum_{i:v_i=1}x_i+\sum_{i:v_i=0}(1-x_i).
+\]
+This is affine in $x$. On binary inputs it equals $d$ if $x=v$ and is at most $d-1$ otherwise. Therefore one ReLU unit
+\[
+ h_v(x)=\max(0,s_v(x)-d+1)
+\]
+outputs exactly one at $v$ and zero at all other Boolean inputs. Set
+\[
+ F(x)=\sum_{v:f(v)=1}h_v(x).
+\]
+At most one such unit is active on each binary input, so $F(x)=f(x)$ there. This is a one-hidden-layer ReLU network with a linear output and at most $2^d$ hidden units. The all-zero truth table uses a zero output.
+
+For XOR, this construction gives $h_{10}(x)=r(x_1-x_2)$ and $h_{01}(x)=r(x_2-x_1)$, exactly the two features used earlier. The construction is a finite-domain argument, not a claim that a continuous ReLU network equals a discontinuous Boolean indicator everywhere in $\mathbb{R}^d$. With a finite sigmoid output, probabilities cannot equal zero and one exactly, though thresholded labels can be exact and probabilities can approach those endpoints.
+
+This proves existence by constructing weights from the entire truth table. It is not a learning procedure that discovers an unseen truth table from a small subset of its rows. The worst-case width is exponential in $d$, so even existence may be computationally impractical.
+
+\subsection{Universal approximation: a precise statement}
+A classical form of the result of \citet{cybenko1989} is: for a continuous sigmoidal activation $\sigma$, every continuous $f:[0,1]^d\to\mathbb{R}$ and every $\varepsilon>0$ admit a finite width $m$ and real parameters such that
+\begin{equation}
+ F(x)=c+\sum_{j=1}^m v_j\sigma(a_j^{\mathsf T}x+b_j),\qquad
+ \sup_{x\in[0,1]^d}|F(x)-f(x)|<\varepsilon.
+\end{equation}
+The output is a linear combination, not restricted to $[0,1]$. Other versions cover other suitable activations and domains. ReLU also has universal approximation results; the constructive one-dimensional proof below needs no appeal to the sigmoid theorem.
+
+Read the quantifiers in order: choose a target and an error tolerance; then a sufficiently large \emph{finite} network exists. The required width and weight magnitudes can depend on both. A single fixed-width architecture is not promised arbitrary precision. No infinite network is required for a fixed positive tolerance, although a sequence of increasingly accurate approximations may require unbounded width.
+
+Compactness matters. A continuous function on a compact interval or cube is bounded and uniformly continuous. Merely saying ``any bounded continuous function'' without specifying the approximation domain and norm is too broad. Uniform approximation on an entire noncompact space is a different assertion. Also, a uniform limit of continuous functions is continuous, so continuous networks cannot uniformly approximate a jump discontinuity to arbitrarily small error across the jump. Weaker integral-error notions can permit approximating discontinuous targets.
+
+\subsection{A first-principles proof in one dimension using ReLU hinges}
+Let $f$ be continuous on $[a,b]$. Given $\varepsilon>0$, uniform continuity supplies $\delta>0$ such that $|f(x)-f(y)|<\varepsilon$ whenever $|x-y|<\delta$. Choose a partition
+$a=t_0<\cdots<t_m=b$ with all intervals shorter than $\delta$.
+
+On $[t_i,t_{i+1}]$, let $\lambda=(x-t_i)/(t_{i+1}-t_i)$ and define the linear interpolant
+\[
+ p(x)=(1-\lambda)f(t_i)+\lambda f(t_{i+1}),\qquad 0\leq\lambda\leq1.
+\]
+Then
+\begin{align*}
+ |p(x)-f(x)|
+ &\leq(1-\lambda)|f(t_i)-f(x)|+\lambda|f(t_{i+1})-f(x)|\\
+ &<(1-\lambda)\varepsilon+\lambda\varepsilon=\varepsilon.
+\end{align*}
+At knots the error is zero. The interpolant is continuous and piecewise linear, so the hinge formula \eqref{eq:act678-hinges} represents it exactly. Two additional ReLUs can encode its initial affine slope if needed. Thus a finite one-hidden-layer ReLU network uniformly approximates $f$ within $\varepsilon$ on this interval.
+
+This is a complete proof for the stated one-dimensional case. It does not constitute a proof of Cybenko's multidimensional theorem. The sigmoid-bump visualization provides another intuition, while the general result requires additional approximation arguments. ``Similar to a Taylor expansion'' is only a loose analogy: a Taylor series uses derivatives and powers around a point, may fail to converge to a smooth function, and does not explain approximation of every continuous function. Learned affine-transformed activations are a different function family.
+
+For a twice differentiable $f$ with $|f''|\leq M$, linear interpolation on an interval of length $\Delta$ satisfies
+\[
+ |f(x)-p(x)|\leq\frac{M\Delta^2}{8}.
+\]
+The interpolation remainder is $f''(\xi)(x-t_i)(x-t_{i+1})/2$, whose absolute product is at most $\Delta^2/4$. For $f(x)=x^2$ on $[0,1]$, $M=2$ and uniform spacing $\Delta=1/m$ gives maximum error $1/(4m^2)$, attained at midpoints. This quantitatively explains the refinement figure in Section 1.6; width buys finer slope changes.
+
+\subsection{What universal approximation does not say}
+It does not specify a small sufficient width for every target, a practical sample size, a convergent optimizer, or good behavior outside the chosen domain. It does not remove noise, ambiguity in the inputs, or finite-precision limitations. It does not say that every parameter setting of a large network is useful.
+
+The real Iris regression example is a concrete reminder. A nonlinear model can represent more functions, but its fixed training run had larger test RMSE than a straight line. A theorem that some wide network exists neither selects a good model for these data nor ranks the particular trained models. Fitting a finite training set and recovering its unknown data-generating rule are different achievements.
+
+\subsection{Depth: repeated composition can reuse a small computation}
+Consider the tent-shaped map on $[0,1]$,
+\[
+ T(x)=2r(x)-4r(x-\tfrac12)+2r(x-1)
+ =\begin{cases}2x&0\leq x\leq\tfrac12,\\2-2x&\tfrac12\leq x\leq1.\end{cases}
+\]
+It maps both half-intervals onto the whole interval $[0,1]$, one in forward order and one in reverse order. Applying $T$ again performs the same fold on each half. Consequently $T\circ T$ has four affine pieces, and $T^{\circ L}$ has $2^L$ affine pieces. Their slopes have magnitude $2^L$, alternating signs.
+
+\begin{figure}[htbp]
+\centering\includegraphics[width=\linewidth]{activations_1_6_1_7/depth_folding.pdf}
+\caption{One small tent computation reused through composition. Each additional composition splits every current affine interval into two. These continuous triangular waves are exact ReLU constructions; a square-wave cartoon should not be read as an exact discontinuous ReLU output.}
+\end{figure}
+
+To see this is an actual deep network, write $v=(2,-4,2)^{\mathsf T}$ and $b=(0,-1/2,-1)^{\mathsf T}$. Let
+\[
+ h^{(1)}=r(\mathbf1_3x+b),\qquad
+ h^{(\ell)}=r(\mathbf1_3v^{\mathsf T}h^{(\ell-1)}+b),\qquad
+ F(x)=v^{\mathsf T}h^{(L)}.
+\]
+Every hidden layer has width three, and $F=T^{\circ L}$. The linear combination implementing one tent is absorbed into the next layer's affine map. The number of parameters is $O(L)$, while the number of affine pieces is exponential in $L$.
+
+By contrast, a one-hidden-layer, one-input ReLU network with $m$ hidden units has at most $m$ distinct knots and therefore at most $m+1$ affine pieces. Each unit contributes at most one knot, and their sum cannot change slope elsewhere. To represent this same tent-composition function \emph{exactly}, it needs at least $2^L-1$ hidden units. This is a constructive representation-efficiency separation for a particular family, not a claim that every function benefits exponentially from depth or that approximation errors automatically obey the same exact-representation bound.
+
+\subsection{Interpreting the linear-region theorem in the slide}
+A linear region is a maximal connected input region where a piecewise-affine network agrees with one affine map. It is not a class label, an independent training example, or a complete measure of learning capacity.
+
+For input dimension $n_0$, $L$ ReLU hidden layers, and widths $n_i\geq n_0$, \citet{montufar2014} give the constructive lower bound
+\[
+ R_{\max}\geq
+ \left(\prod_{i=1}^{L-1}\left\lfloor\frac{n_i}{n_0}\right\rfloor^{n_0}\right)
+ \sum_{j=0}^{n_0}\binom{n_L}{j}.
+\]
+For equal width $n$ divisible by fixed $n_0$ and $n>n_0$, this displays exponential growth in $L$. The slide summarizes the growth as
+\[
+ \Omega\!\left((n/n_0)^{(L-1)n_0}n^{n_0}\right).
+\]
+The floored expression states the explicit construction; the shorthand should be interpreted with its asymptotic regime. $\Omega$ is a lower bound on achievable maximal region count, not an equality for every network. Width and input dimension assumptions matter; for example the displayed base gives no exponential factor at $n=n_0$. The output map must preserve distinctions to retain all these regions.
+
+Depth enables a later computation to act on many portions of the original input after earlier layers map them to common coordinates. Regions are not independent arbitrary pieces: they share parameters through composition. A network with all-zero weights remains constant regardless of depth. More potential regions therefore do not prove better accuracy, successful optimization, or immunity to overfitting.
+
+\subsection{Capacity comparison and answers to the lecture questions}
+\begin{center}
+\small
+\begin{tabular}{p{2.6cm}p{5.1cm}p{6cm}}
+\toprule
+Architecture & What it can express & What remains unguaranteed\\
+\midrule
+No hidden layer & Affine regression; a sigmoid of an affine score; affine pairwise softmax boundaries & XOR in raw binary coordinates; arbitrary nonlinear dependence\\
+One suitable nonlinear hidden layer & Arbitrary Boolean tables on their finite domain; arbitrary-precision continuous approximation on compact domains when width can grow & Small width, feasible training, accurate unseen predictions\\
+Many nonlinear hidden layers & Compositions and reuse of learned features; efficient representations of some functions requiring many shallow units & An exponential gain for every target, every weight setting, or every data distribution\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The universal approximation theorem states an existence result with an error tolerance, a domain, and a suitable activation. It does not state a learning or generalization guarantee. A shallow universal family and a deep efficient family are not contradictory: both may approximate a function, while requiring very different resources.
+
+\paragraph{Reconstruct the argument yourself.}
+For a one-input ReLU network, count possible knots before counting parameters. For a tent composition, count how many old intervals are mapped across the next fold. For a Boolean lookup network, count matching bits. These three different counting arguments explain shallow shape flexibility, compositional efficiency, and finite-domain universality without relying on a slogan.

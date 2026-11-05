@@ -142,3 +142,24 @@ Figures are committed; Python is optional for building the reader. The experimen
 uses fixed training inputs and repeated independent label noise, explicitly distinguished
 from the slides' random-design experiment. Existing shared typography is preserved
 (11 pt Latin Modern); it is not a Times New Roman export.
+
+## Deep Learning: sections 1.6–1.8
+
+Activation functions, likelihood-based output/loss pairings, and representational
+power are developed through explicit curve constructions and actual Iris fits.
+Includes all eight requested activations, derivatives, softmax versus hard decisions,
+ReLU regression limitations, a constructive one-dimensional approximation proof,
+Boolean lookup units, and depth through repeated tent-map composition.
+
+```bash
+python deep_learning/code/activations_1_6_1_7.py
+make dl
+```
+
+The companion uses NumPy for training and Matplotlib for nine figures. The Iris CSV
+is committed; scikit-learn was used only to obtain the dataset, not to train models.
+[Full-precision weights, splits, preprocessing, and results](deep_learning/figures/activations_1_6_1_7/trained_models.json)
+make the examples reproducible. On this fixed split, the one-feature regression MLP
+has test RMSE 0.16337 cm versus 0.13947 cm for a straight-line baseline; the three-class
+model classifies 30/30 test examples correctly. These are illustrative single-split
+results, not claims that MLPs always outperform simpler models or generalize perfectly.

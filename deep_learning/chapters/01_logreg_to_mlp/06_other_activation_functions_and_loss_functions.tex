@@ -1,7 +1,382 @@
-% ============================================================
-%  1.6 Other Activation Functions and Loss Functions
-% ============================================================
+% Activation functions as building blocks; outputs as distribution parameters.
 \section{Other Activation Functions and Loss Functions}
 \label{sec:logreg_to_mlp:other_activation_functions_and_loss_functions}
 
-% Notes go here.
+\subsection{Can neurons really add up to draw a curve?}
+Yes, with an important distinction between \emph{summing within a layer} and \emph{composing across layers}. For one scalar input $x$, one hidden layer of $m$ units, and a linear scalar output,
+\begin{equation}
+ h_j(x)=g(a_jx+b_j),\qquad
+ \boxed{f_\theta(x)=c+\sum_{j=1}^m v_jg(a_jx+b_j).}
+ \label{eq:act678-sum}
+\end{equation}
+This is a function of one variable drawn in a two-dimensional $(x,y)$ plot. Each hidden unit supplies a transformed curve; the output weights add those curves, possibly with negative signs. The parameters control four different operations:
+\begin{itemize}
+\item $a_j$: horizontal scaling and, when negative, reflection;
+\item $b_j$: translation of the preactivation, placing its zero at $x=-b_j/a_j$ when $a_j\neq0$;
+\item $v_j$: vertical scaling or reflection of that unit's contribution;
+\item $c$: an overall vertical offset.
+\end{itemize}
+The quantity $v_jg(a_jx+b_j)$ is the \emph{contribution} to the output; $h_j$ alone is the hidden activation. Distinguishing them matters: positive ReLU outputs can still combine into a decreasing or negative function through negative $v_j$.
+
+For binary classification, the sum in \eqref{eq:act678-sum} usually gives the \emph{logit}, and a final sigmoid converts it to a probability. For several hidden layers, later units apply $g$ to weighted combinations of earlier features. The model is then a nested composition, not simply a list of unchanged elementary curves added at the end.
+
+\begin{keyidea}[The useful curve-building picture]
+One hidden layer with a linear output is a learned weighted sum of shifted/scaled activation curves. Deep networks additionally compose these learned transformations. Training changes the parameters to reduce a data-dependent objective; it is not tracing a desired graph supplied everywhere in advance.
+\end{keyidea}
+
+\subsection{Build a piecewise-linear curve with exact weights}
+Let $r(x)=\max(0,x)$ and work on $[0,4]$. Define
+\[
+ f(x)=r(x)-2r(x-1)+3r(x-2)-2r(x-3).
+\]
+This is a $1\to4\to1$ ReLU network with
+\[
+ \mathbf{a}=(1,1,1,1),\quad\mathbf{b}=(0,-1,-2,-3),\quad
+ \mathbf{v}=(1,-2,3,-2),\quad c=0.
+\]
+Every added hinge changes the slope when its threshold is crossed:
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Interval & Active contributions & Resulting slope\\
+\midrule
+$(0,1)$ & first & $1$\\
+$(1,2)$ & first two & $1-2=-1$\\
+$(2,3)$ & first three & $1-2+3=2$\\
+$(3,4)$ & all four & $1-2+3-2=0$\\
+\bottomrule
+\end{tabular}
+\end{center}
+The curve passes through $(0,0),(1,1),(2,0),(3,2),(4,2)$. The network's output weights encode \emph{changes of slope}, rather than directly specifying the heights of those points.
+
+\begin{figure}[htbp]
+\centering\includegraphics[width=\linewidth]{activations_1_6_1_7/hinge_sum.pdf}
+\caption{Exact, deliberately chosen weights. Left: individual weighted hinges. Middle: their partial sums. Right: the final curve. Adding hidden units adds locations where the slope can change. These are constructed weights, distinct from the trained Iris weights below.}
+\end{figure}
+
+More generally, if a continuous piecewise-linear function has knots $t_1<\cdots<t_m$ and successive slopes $s_0,s_1,\ldots,s_m$, then
+\begin{equation}
+ f(x)=\alpha+s_0x+\sum_{j=1}^m(s_j-s_{j-1})r(x-t_j).
+ \label{eq:act678-hinges}
+\end{equation}
+To prove it, differentiate away from the knots. Before $t_1$, the slope is $s_0$. After knot $t_j$, the new hinge adds $s_j-s_{j-1}$, so the sum telescopes to $s_j$. Choose $\alpha$ to match one value; continuity and equal slopes imply the functions agree everywhere. The direct linear term can itself be implemented with $x=r(x)-r(-x)$, so this expression is realizable by an ordinary one-hidden-layer ReLU network without a skip connection.
+
+For a general term $v_jr(a_jx+b_j)$, the knot is $-b_j/a_j$. A positive $a_j$ activates to its right, a negative one to its left. The slope jump from left to right is $v_j|a_j|$. Zero input weights produce constants; a knot outside the observed interval may make a unit affine or inactive throughout that interval.
+
+Sigmoids provide another construction. The difference
+\[
+ \sigma(s(x-u))-\sigma(s(x-v)),\qquad u<v,\ s>0,
+\]
+is approximately a window: nearly zero outside $[u,v]$, nearly one inside, with smooth transitions. Weighted windows form smooth bumps and plateaus. Larger $s$ sharpens transitions but also narrows the region with substantial sigmoid derivative. This is an intuition for approximation, not a proof of uniform approximation of a discontinuous step at its jump.
+
+\begin{figure}[htbp]
+\centering\includegraphics[width=\linewidth]{activations_1_6_1_7/bumps_and_approximation.pdf}
+\caption{Left: one positive and one negative sigmoid combine into a soft local window. Right: piecewise-linear interpolation of $x^2$ improves as the knots become finer; every interpolant has the hinge representation in \eqref{eq:act678-hinges}. Section 1.7 turns this observation into a one-dimensional approximation proof.}
+\end{figure}
+
+\subsection{What should we inspect in an activation function?}
+An activation has two simultaneous roles: it shapes the class of functions that the network can express, and its derivative affects how parameters can be learned. For one unit $h=g(z)$ and $z=ax+b$, the chain rule gives
+\[
+ \frac{\partial\ell}{\partial a}
+ =\frac{\partial\ell}{\partial h}\,g'(z)x,\qquad
+ \frac{\partial\ell}{\partial b}
+ =\frac{\partial\ell}{\partial h}\,g'(z).
+\]
+A locally flat activation can therefore block a parameter update through that path. Across many layers, Jacobians multiply; small activation derivatives can contribute to vanishing gradients, though weight matrices and the whole computation also matter. Inspect range, saturation, smoothness, sign, and derivative rather than treating an activation's name as a performance guarantee.
+
+\begin{figure}[htbp]
+\centering\includegraphics[width=\linewidth]{activations_1_6_1_7/activation_atlas.pdf}
+\caption{Eight activation functions (solid) and their derivatives (dashed). PReLU uses slope $a=0.2$, ELU uses $\alpha=1$, and Swish uses $\beta=1$. Derivative conventions at ReLU/PReLU kinks are implementation choices. Hidden-unit values need not be probabilities.}
+\end{figure}
+
+\subsection{Sigmoid and hyperbolic tangent}
+The logistic sigmoid is
+\[
+ \sigma(z)=\frac1{1+e^{-z}},\qquad
+ \sigma'(z)=\frac{e^{-z}}{(1+e^{-z})^2}=\sigma(z)(1-\sigma(z)).
+\]
+It maps $\mathbb{R}$ into $(0,1)$, is strictly increasing, and saturates near both endpoints. Its derivative is at most $1/4$, attained at zero. These properties make it a natural Bernoulli probability map, but saturation can impede learning in hidden layers.
+
+The hyperbolic tangent is
+\[
+ \tanh z=\frac{e^z-e^{-z}}{e^z+e^{-z}}=2\sigma(2z)-1.
+\]
+Using the sigmoid derivative and chain rule,
+\[
+ \frac{d}{dz}\tanh z=4\sigma(2z)(1-\sigma(2z))=1-\tanh^2z.
+\]
+Its range is $(-1,1)$, it is odd and centered at zero, and its derivative is one at zero but vanishes in either saturated tail. It is not itself a probability because it can be negative. If $t=\tanh z$, then
+\[
+ p=\frac{t+1}{2}=\sigma(2z)
+\]
+is a valid binary probability. Hence a tanh binary output requires a label/probability convention; inserting a negative tanh value directly into binary cross-entropy is invalid. Tanh scores thresholded at zero can classify labels coded $-1,+1$, while a likelihood must specify the corresponding probabilities.
+
+\subsection{Linear and rectified linear activations}
+The linear activation $g(z)=z$ has range $\mathbb{R}$ and derivative one. It is useful for unconstrained real-valued outputs. As proved in Section 1.4, a network of affine maps with only linear activations collapses to one affine map, irrespective of depth.
+
+ReLU is $r(z)=\max(0,z)$, with
+\[
+ r'(z)=\begin{cases}0&z<0,\\1&z>0.\end{cases}
+\]
+It is continuous but not differentiable at zero; a common convention sets the derivative there to zero. It does not saturate on the positive side. A unit whose preactivation stays negative on all training examples receives zero gradient through the ReLU path for its incoming weights and bias. This is the ``dead ReLU'' mechanism; it does not mean every negative activation makes a neuron permanently dead, since other updates can alter its inputs. ReLU hidden activations are nonnegative, but a linear output with signed weights is unrestricted.
+
+\subsection{PReLU and ELU: what happens on the negative side?}
+Parametric ReLU uses a learned negative-side slope:
+\[
+ g_a(z)=\begin{cases}z&z\geq0,\\az&z<0,\end{cases}\qquad
+ \frac{\partial g_a}{\partial z}=\begin{cases}1&z>0,\\a&z<0,\end{cases}
+ \quad
+ \frac{\partial g_a}{\partial a}=\begin{cases}0&z\geq0,\\z&z<0.\end{cases}
+\]
+Thus $a$ learns from negative preactivations as well as affecting gradients flowing to earlier layers. A fixed slope is usually called leaky ReLU; learning it gives PReLU \citep{he2015prelu}. Parameters may be per unit/channel or shared. With positive $a$, both sides pass gradients; unconstrained learning does not mathematically force $a$ to remain positive. At $a=1$ the function is linear, and at $a=0$ it is ReLU.
+
+For $\alpha>0$, the exponential linear unit is
+\[
+ \operatorname{ELU}_\alpha(z)=\begin{cases}z&z\geq0,\\\alpha(e^z-1)&z<0,\end{cases}\qquad
+ g'(z)=\begin{cases}1&z>0,\\\alpha e^z&z<0.\end{cases}
+\]
+It permits negative outputs and tends to $-\alpha$ as $z\to-\infty$. Unlike a leaky straight line, its negative tail saturates and its derivative tends to zero. It is continuous at zero for all $\alpha$, but the left and right derivatives agree there only when $\alpha=1$. ELU was introduced by \citet{clevert2015elu}; these shape properties do not establish that it will outperform every other activation on a given task.
+
+\subsection{GELU and Swish: smooth input-dependent gates}
+Let $\Phi$ and $\phi$ be the standard normal CDF and density. The exact Gaussian Error Linear Unit is
+\[
+ \operatorname{GELU}(z)=z\Phi(z),\qquad
+ \operatorname{GELU}'(z)=\Phi(z)+z\phi(z).
+\]
+The derivative follows immediately from the product rule and $\Phi'=\phi$. For $U\sim\mathcal{N}(0,1)$ and fixed $z$, $\mathbb{E}[z\mathbf1\{U\leq z\}]=z\Phi(z)$: this is an interpretation as the expected value of a random gate. Standard GELU evaluation is deterministic; it does not sample that gate. It is smooth, behaves approximately like identity far to the right and tends to zero from below far to the left. It is not globally monotone \citep{hendrycks2016gelu}.
+
+A common approximation, which must be distinguished from exact GELU, is
+\[
+ \operatorname{GELU}(z)\approx\frac z2\left[1+\tanh\!\left(\sqrt{\frac2\pi}(z+0.044715z^3)\right)\right].
+\]
+Our plots use the exact CDF via the error function, not this approximation.
+
+Swish is
+\[
+ \operatorname{Swish}_\beta(z)=z\sigma(\beta z),\qquad
+ g'(z)=\sigma(\beta z)+\beta z\sigma(\beta z)(1-\sigma(\beta z)).
+\]
+It uses a logistic rather than a Gaussian gate. For $\beta=1$ it is also commonly called SiLU. For positive $\beta$ it has a small negative, nonmonotone portion; at $\beta=0$ it equals $z/2$, and as $\beta\to+\infty$ it approaches ReLU pointwise. The original Swish study explores fixed or trainable $\beta$ \citep{ramachandran2017swish}. Neither smoothness nor a nonzero negative output alone guarantees well-conditioned optimization.
+
+\subsection{Output activations describe what predictions can mean}
+Hidden activations construct features. Output activations constrain the final prediction to an appropriate space. A loss then scores that prediction against an observation. A useful choice starts by specifying a conditional distribution for the observation:
+\begin{center}
+\small
+\begin{tabular}{p{3cm}p{3cm}p{3.5cm}p{4cm}}
+\toprule
+Task & Output & Distribution model & Negative log-likelihood\\
+\midrule
+Real regression & identity mean & fixed-variance Gaussian & scaled squared error\\
+Binary class & sigmoid probability & Bernoulli & binary cross-entropy\\
+One of $K$ classes & softmax vector & categorical & categorical cross-entropy\\
+Multiple independent labels & $K$ sigmoids & product of Bernoullis & summed binary cross-entropies\\
+\bottomrule
+\end{tabular}
+\end{center}
+These are natural pairings, not the only possible losses. Absolute error corresponds to a fixed-scale Laplace model, for example. Constraints such as positive means or variable uncertainty may call for other parameterizations. ``Linear output'' means identity activation on the final logit; the complete input-to-output function can still be highly nonlinear.
+
+\subsection{Derive squared error from a Gaussian observation model}
+Assume conditionally independent observations with
+\[
+ Y_n\mid x_n\sim\mathcal{N}(f_\theta(x_n),\sigma^2),
+\]
+where $\sigma^2>0$ is fixed. The Gaussian density gives
+\begin{align}
+ -\log p(y_n\mid x_n;\theta)
+ &=\tfrac12\log(2\pi\sigma^2)+\frac{(y_n-f_\theta(x_n))^2}{2\sigma^2}.
+\end{align}
+The first term is independent of $\theta$. Multiplying the average likelihood objective by the positive constant $\sigma^2$ gives
+\[
+ \boxed{J(\theta)=\frac1{2N}\sum_n(f_\theta(x_n)-y_n)^2.}
+\]
+This is half the mean squared error; the factor $1/2$ cancels the derivative's factor two. For identity output $\hat y=z$, $\partial\ell/\partial z=\hat y-y$. It is a continuous density model, so a density value is not the probability of observing exactly one real number. If variance is learned, the logarithmic variance term cannot be discarded.
+
+Even without a Gaussian assumption, conditional squared error is minimized by the conditional mean when the second moment is finite:
+\[
+ \mathbb E[(a-Y)^2\mid X=x]
+ =(a-\mathbb E[Y\mid x])^2+\operatorname{Var}(Y\mid x).
+\]
+The second term cannot be changed by choosing $a$. This explains why overlapping one-feature Iris observations lead a squared-error model toward an average response, rather than requiring it to pass through every point.
+
+\subsection{Binary cross-entropy and why the output gradient simplifies}
+For $p=\sigma(z)$ and $y\in\{0,1\}$, a Bernoulli model gives
+\[
+ \ell=-y\log p-(1-y)\log(1-p),\qquad
+ \frac{\partial\ell}{\partial p}=\frac{p-y}{p(1-p)}.
+\]
+Multiplying by $\partial p/\partial z=p(1-p)$ yields
+\[
+ \boxed{\frac{\partial\ell}{\partial z}=p-y.}
+\]
+In contrast, half squared error on the same sigmoid probability has gradient
+$(p-y)p(1-p)$. For a confident wrong prediction $y=1$, $z\ll0$, the BCE gradient approaches $-1$ while the squared-error gradient approaches zero. This illustrates why the likelihood-based pairing can give a more useful correction signal at the output. It does not remove vanishing gradients inside earlier saturated hidden layers.
+
+\begin{figure}[htbp]
+\centering\includegraphics[width=\linewidth]{activations_1_6_1_7/loss_gradients.pdf}
+\caption{For $y=1$, compare BCE with squared error applied to a sigmoid probability. These losses encode different objectives. Their derivatives with respect to the logit differ sharply for confident mistakes.}
+\end{figure}
+
+A stable binary loss uses logits directly:
+\[
+ \ell(z,y)=\log(1+e^z)-yz
+ =\log(1+e^{(1-2y)z})\quad(y\in\{0,1\}).
+\]
+Compute the latter as \texttt{np.logaddexp(0, (1-2*y)*z)}, avoiding explicit logarithms of rounded zero probabilities. For soft targets in $[0,1]$, the first identity remains valid but the second generally does not.
+
+\subsection{Derive softmax from relative evidence and normalization}
+For $K$ mutually exclusive and exhaustive classes, the output must satisfy $p_k>0$ and $\sum_kp_k=1$. Let $z_k$ be unrestricted scores. If their differences are modeled as log-odds,
+\[
+ \log\frac{p_k}{p_j}=z_k-z_j,
+\]
+then $p_k$ is proportional to $e^{z_k}$. Normalization forces
+\[
+ \boxed{p_k=\operatorname{softmax}(\mathbf z)_k
+ =\frac{e^{z_k}}{\sum_j e^{z_j}}.}
+\]
+This is a useful modeling choice, not the unique possible map into the probability simplex. Adding the same constant to every score leaves all probabilities unchanged. Numerically subtract $m=\max_jz_j$ before exponentiating:
+$p_k=e^{z_k-m}/\sum_j e^{z_j-m}$.
+For two classes, $p_1=\sigma(z_1-z_0)$, connecting softmax back to sigmoid.
+
+For one-hot targets, $y_k=1$ only for the observed class. The categorical likelihood is $\prod_k p_k^{y_k}$, so
+\[
+ \ell(\mathbf z,\mathbf y)=-\sum_k y_k\log p_k
+ =\log\sum_j e^{z_j}-\sum_k y_kz_k,
+\]
+where $\sum_ky_k=1$. Averaging over $N$ examples yields the lecture's multiclass cross-entropy. The same expression can score a soft target distribution, interpreted as an average over possible labels.
+
+By the quotient rule,
+\[
+ \frac{\partial p_k}{\partial z_j}=p_k(\delta_{kj}-p_j).
+\]
+Thus changing one logit changes all class probabilities. Combining with $\partial\ell/\partial p_k=-y_k/p_k$ gives
+\[
+ \frac{\partial\ell}{\partial z_j}
+ =-\sum_k y_k(\delta_{kj}-p_j)=p_j-y_j.
+\]
+The output correction is again prediction minus target. This does not make an MLP's parameter-space loss convex: hidden nonlinear parameterizations remain.
+
+\subsection{Transfer question: why not a hard maximum?}
+Distinguish a maximum value $\max_k z_k$, a winning index $\arg\max_kz_k$, and a one-hot winner vector. A maximum value is not a probability distribution. A one-hot winner assigns exact zero probability to every losing class, so cross-entropy is infinite whenever the wrong class wins. Its output is locally constant away from ties, giving zero ordinary derivative; ties are nondifferentiable. It also discards whether the winner barely won or was overwhelmingly preferred.
+
+Softmax supplies probabilities and a smooth learning signal for every logit. At prediction time, a hard decision is entirely appropriate when one class must be chosen:
+\[
+ \arg\max_k p_k=\arg\max_k z_k.
+\]
+The hard decision is usually applied after training, outside the differentiable loss. A temperature $\tau>0$ gives $p_k\propto e^{z_k/\tau}$; as $\tau\downarrow0$, mass concentrates on the unique largest score. With ties it splits among the tied maxima. Softmax probabilities are model estimates, not automatically calibrated real-world frequencies.
+
+\subsection{Transfer question: what if regression has a ReLU output?}
+Then $\hat y=\max(0,z)$ forces predictions to be nonnegative. Negative targets cannot be fitted: for $y<0$, the best allowable output under squared error is zero, with unavoidable half squared error $y^2/2$.
+
+There is also an optimization effect. Away from zero,
+\[
+ \frac{\partial}{\partial z}\frac12(\max(0,z)-y)^2
+ =(\max(0,z)-y)\mathbf1\{z>0\}.
+\]
+If $z<0$, the gradient is zero even when $y>0$ and the prediction is wrong. A single example cannot correct its final preactivation through this path. Other examples may update shared weights and move it into the active region, but this is not guaranteed. ReLU output can enforce a meaningful nonnegativity constraint, yet a softplus output $\log(1+e^z)$ offers a smooth strictly positive alternative. Softplus still has a small derivative far left and cannot produce exact zero with finite $z$. Choose the output domain and likelihood deliberately.
+
+\subsection{Real weights on Iris: one feature and a continuous target}
+The following coefficients are actually fitted, not hand-drawn. We use the 150-row Iris measurements, exported from \texttt{sklearn.datasets.load\_iris} into a committed CSV. Species IDs are 0=setosa, 1=versicolor, 2=virginica. The original dataset is documented by UCI \citep{irisuci}; the exact CSV and its SHA-256 identify the copy used here.
+
+For a two-axis curve plot, use petal length $x$ in centimetres to predict petal width $y$ in centimetres. This repurposes the measurements for regression; it is not the dataset's usual species-classification task. A fixed seed 2026 splits each species into 40 training and 10 test examples, yielding 120/30 rows. Only training rows determine means and standard deviations. No test error is used to select architecture, training duration, or parameters.
+
+Train a $1\to6\to1$ ReLU network with linear output using NumPy full-batch Adam for 5,000 steps, learning rate $0.01$, seed 11, and a weight-only penalty $\lambda\sum W^2/2$ with $\lambda=10^{-4}$. The objective is half MSE in standardized target units plus this penalty. Adam's coefficients are $\beta_1=0.9$, $\beta_2=0.999$, and $\epsilon=10^{-8}$. Full code and exact values are saved; this is a reproducible illustration, not a search for a best Iris model.
+
+The training normalization is
+\[
+ u=\frac{x-3.776667}{1.769309},\qquad
+ t=\frac{y-1.204167}{0.761839}.
+\]
+If the trained standardized prediction is $\hat t=b_o+\sum_jv_jr(w_ju+b_j)$, undo the transformations to obtain
+\[
+ \hat y=c+\sum_{j=1}^6 V_jr(A_jx+B_j),
+\]
+with
+\[
+ A_j=\frac{w_j}{s_x},\quad B_j=b_j-\frac{w_j\mu_x}{s_x},\quad
+ V_j=s_yv_j,\quad c=\mu_y+s_yb_o.
+\]
+These are the fitted coefficients in the original measurement units:
+\input{figures/activations_1_6_1_7/regression_weights.tex}
+Values in the table are rounded; the companion JSON preserves full precision. Unit 1 is inactive on the plotted interval, its input/output weights are approximately zero, and its nominal knot is far outside the data. Several other knots cluster: width six does not imply six useful, evenly spaced features. Real training can produce inactive or redundant units.
+
+\begin{figure}[htbp]
+\centering\includegraphics[width=\linewidth]{activations_1_6_1_7/iris_regression_decomposition.pdf}
+\caption{Actual fitted Iris weights. Left: the six weighted hidden curves. Middle: bias plus successive contributions; their order is illustrative, not a training sequence. Right: their final sum against training and held-out measurements, with a straight-line baseline. Each model is fitted only on training rows.}
+\end{figure}
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+Model & Training RMSE (cm) & Test RMSE (cm)\\
+\midrule
+ReLU MLP & 0.18696 & 0.16337\\
+Straight line (training least squares) & --- & 0.13947\\
+Constant training-mean prediction & --- & 0.75112\\
+\bottomrule
+\end{tabular}
+\end{center}
+The simpler straight line predicts better on this particular held-out split. We retain this outcome rather than adjusting the example until the MLP wins. A richer function family guarantees neither that optimization finds its best member nor that the selected function generalizes better. A single feature also cannot uniquely determine every petal width: species and other measurements contain information omitted here. Outside the training range, the ReLU network continues its end segments; a smooth-looking fit does not justify extrapolation.
+
+\subsection{Real weights on Iris: hidden features and softmax species prediction}
+For classification, use sepal length and petal width, keeping all three species and the same 120/30 split. Standardize with training statistics:
+\[
+ u_1=\frac{x_{\rm sepal}-5.865000}{0.844951},\qquad
+ u_2=\frac{x_{\rm petalwidth}-1.204167}{0.761839}.
+\]
+Fit a $2\to6\to3$ tanh network with softmax output for 4,000 full-batch Adam steps, seed 19, learning rate $0.01$, and weight penalty $\lambda=0.001$. Its equations are
+\[
+ h_j=\tanh(w_{j1}u_1+w_{j2}u_2+b_j),\qquad
+ z_k=c_k+\sum_{j=1}^6v_{kj}h_j,\qquad p_k=\operatorname{softmax}(\mathbf z)_k.
+\]
+The actual learned coefficients are:
+\input{figures/activations_1_6_1_7/classifier_weights.tex}
+
+For held-out CSV row 28 (zero-based), the selected inputs are $(5.2,0.2)$ cm. The hidden activations are approximately
+\[
+ \mathbf h=(-1.0000,\ 0.9986,\ 0.8045,\ 0.9809,\ -0.8155,\ -0.8150),
+\]
+and the logits and probabilities are
+\[
+ \mathbf z=(5.65199,-1.01143,-4.44544),\qquad
+ \mathbf p=(0.998684,0.001275,0.000041).
+\]
+Its largest probability is for setosa. For example, the setosa score is a signed weighted sum of the six features plus $c_0=0.83680$; it is not a sum of six probabilities.
+
+\begin{figure}[htbp]
+\centering\includegraphics[width=\linewidth]{activations_1_6_1_7/iris_hidden_features.pdf}
+\caption{The six tanh features from the trained classifier, each plotted over the same two raw measurements. Red denotes values near $+1$ and blue values near $-1$. These are internal features, not species probabilities; similar-looking units can be redundant.}
+\end{figure}
+\begin{figure}[htbp]
+\centering\includegraphics[width=\linewidth]{activations_1_6_1_7/iris_classification.pdf}
+\caption{Left: predicted class regions and the 30 test observations. Right: class probability curves as petal width varies with sepal length fixed at its training mean. This is a one-dimensional slice of a two-feature classifier, not a different one-feature model.}
+\end{figure}
+
+Training accuracy is $115/120=95.83\%$. Test accuracy is $30/30=100\%$, with average test cross-entropy $0.06792$ nats. There are ten test examples per species and the confusion matrix is diagonal. The perfect test classification is a result on one small split, not a claim of perfect population performance or calibrated probabilities. That test accuracy exceeds training accuracy here is possible because the held-out sample happens to be easier.
+
+\begin{figure}[htbp]
+\centering\includegraphics[width=\linewidth]{activations_1_6_1_7/iris_training.pdf}
+\caption{Training objectives for the two pre-specified Iris models, including their L2 penalties. Training curves show optimization progress, not generalization performance; the test set was not used for stopping.}
+\end{figure}
+
+\subsection{Implementation and reconstruction tasks}
+The companion \texttt{activations\_1\_6\_1\_7.py} reads the committed CSV and uses NumPy for forward passes, gradients, and Adam. The activation plots use \texttt{math.erf} for the exact normal CDF. Finite-difference checks agree with both network gradients to better than $3\times10^{-10}$ in maximum absolute error on the check examples; all eight activation derivatives are checked away from kinks. These numerical checks support the implementation, not a proof that training reaches a global optimum.
+
+\begin{lstlisting}
+# One hidden layer, row-batch notation:
+z_hidden = X @ W1.T + b1
+h = np.maximum(z_hidden, 0.0)  # use np.tanh for the classifier
+logits = h @ W2.T + b2
+
+# Stable softmax, if outputs encode mutually exclusive classes:
+a = logits - logits.max(axis=1, keepdims=True)
+p = np.exp(a)
+p /= p.sum(axis=1, keepdims=True)
+
+# Classification backpropagation at the output:
+d_logits = p.copy()
+d_logits[np.arange(len(y)), y] -= 1
+d_logits /= len(y)
+\end{lstlisting}
+For the regression network, the analogous output derivative is $(\hat t-t)/N$. Multiplication by the output weights and the hidden activation derivative propagates that signal to the first layer; the code includes the weight-penalty derivatives.
+
+To check understanding without rereading, reconstruct the hinge curve from its desired slopes, calculate one Iris prediction from the saved coefficients, and explain why softmax changes every class probability when only one logit changes. Then deliberately remove the hidden nonlinearity: the two weight matrices must collapse into one affine map. These tasks test whether the equations are usable, rather than only recognizable.

@@ -1,7 +1,57 @@
-% ============================================================
-%  1.8 Summary, Further Reading, References
-% ============================================================
 \section{Summary, Further Reading, References}
 \label{sec:logreg_to_mlp:summary_further_reading_references}
 
-% Notes go here.
+\subsection{Reconstruct the chapter as one connected argument}
+Start with a binary outcome and an affine score. Modeling its conditional log-odds as affine leads to a sigmoid probability. A Bernoulli likelihood then gives binary cross-entropy. Averaging negative log probabilities under a source gives cross-entropy; subtracting source entropy gives forward KL, when the expressions are well-defined. Replacing an unknown expectation by the sample average leads to maximum likelihood.
+
+Drawing the same sigmoid computation as a neuron changes its organization, not its mathematics. Hidden nonlinear layers then learn the features on which the final prediction depends. Matrix multiplication collects their scalar dot products; dimensions track examples, features, and units. Operation counts and stored array sizes follow from these dimensions, with activation lifetime determining memory beyond parameters.
+
+Activation functions shape both representations and gradient flow. Output activations instead encode the prediction's allowed domain: a real mean, a binary probability, or a probability vector. A likelihood supplies a corresponding loss. One hidden layer with a linear output is a weighted sum of transformed activations, so neurons really can combine to build a curve. Depth adds composition and reuse. Existence and representation efficiency remain separate from optimization and generalization.
+
+\subsection{Learning goals with precise qualifications}
+\begin{itemize}
+\item For a hard observed class label, cross-entropy is the negative log of the \emph{model-assigned probability of that label}. It is not a log of classification accuracy.
+\item Logistic regression is a sigmoid neuron; the classical hard-threshold perceptron has a different activation and learning rule.
+\item Conditional cross-entropy equals conditional source entropy plus average conditional forward KL. Empirical likelihood estimates the population objective; continuous empirical point masses require care when writing KL to a density.
+\item MLPs alternate affine maps and nonlinear activations. Stacking only affine maps yields an affine map.
+\item Biases are shared across batch examples. Broadcasting describes repeated use, not repeated trainable parameters.
+\item Time counts arithmetic; memory counts stored objects and their lifetimes. Parameters, input/output, and any retained activations must be included according to the question's convention.
+\item Sigmoid, tanh, identity, ReLU, PReLU, ELU, GELU, and Swish differ in output ranges, derivatives, saturation, and smoothness. No one shape wins on every task.
+\item Identity/Gaussian, sigmoid/Bernoulli, and softmax/categorical pairings explain squared error and cross-entropy. Tanh must be mapped to a valid probability before a Bernoulli log loss.
+\item One-hidden-layer universality allows width to grow and specifies a compact domain and approximation error. Boolean lookup constructions can require exponentially many units.
+\item Depth can make some representations exponentially more efficient. The linear-region result concerns achievable region counts under assumptions, not guaranteed accuracy gains.
+\end{itemize}
+
+\subsection{Practice without looking, then check the reasoning}
+\paragraph{1. Curve reconstruction.}
+A continuous function has slopes $2,-1,3$ across knots 1 and 2 and satisfies $f(0)=0$. Write a ReLU representation on $[0,3]$.
+
+\paragraph{2. Output diagnosis.}
+A regressor has $z=-2$, ReLU output, and target $y=3$. Find its output, half squared error, and derivative with respect to $z$. Would a linear output have the same derivative?
+
+\paragraph{3. Relative evidence.}
+Softmax logits are $(1,2,3)$. What changes if 100 is added to all logits? What if only the first logit is increased? Derive the answer using normalization.
+
+\paragraph{4. Exact versus approximate.}
+Explain why a finite sigmoid output cannot equal one exactly, yet can classify every row of a finite Boolean truth table correctly. What would a $1/2$ threshold do?
+
+\paragraph{5. Transfer to a new dataset.}
+Choose one input and one real target, split data before normalizing, fit a small MLP and a straight line, and plot the individual weighted hidden curves. Report test error even if the simpler model wins. State whether you trained hidden parameters or only output coefficients.
+
+\subsection{Worked checks}
+\paragraph{1. Slopes.}
+$f(x)=2r(x)-3r(x-1)+4r(x-2)$ on $[0,3]$. The changes of slope are $-3$ and $+4$, not the later slopes themselves. On a general real domain replace the initial $2r(x)$ by $2r(x)-2r(-x)$ if the initial segment should extend with slope two to negative inputs.
+
+\paragraph{2. A blocked output gradient.}
+The ReLU output is zero, the loss is $9/2$, and its derivative with respect to $z$ is zero. For a linear output $\hat y=-2$, the loss is $25/2$ and the derivative is $-5$. Having a smaller current loss does not imply having a useful gradient for reaching a good solution.
+
+\paragraph{3. Softmax.}
+A shared shift multiplies numerator and denominator by the same factor and cancels. Increasing only the first score raises its probability and lowers the others through the common denominator. For $j\neq1$, $\partial p_j/\partial z_1=-p_jp_1$.
+
+\paragraph{4. Classification versus endpoint probabilities.}
+Finite sigmoid outputs lie strictly between zero and one. A finite dataset can still have every positive example above $1/2$ and every negative one below it, so thresholded predictions can be exact without exact endpoint probabilities.
+
+\subsection{Reproducible materials and further reading}
+The script \texttt{deep\_learning/code/activations\_1\_6\_1\_7.py} regenerates nine figures and fits both Iris models using NumPy. The committed \texttt{deep\_learning/data/iris.csv} makes reproduction independent of a dataset download. Its source is the scikit-learn loader for the classic UCI Iris data. The companion \texttt{trained\_models.json} includes full-precision weights, normalization statistics, zero-based row splits, optimizer settings, histories, test results, and the dataset checksum. Tables are generated from those weights, not manually invented values.
+
+For a connected treatment, consult \citet{goodfellow2016deep}, especially Chapter 6, and \citet{bishop2006pattern}. For precise theorem statements, see \citet{cybenko1989} on sigmoid approximation and \citet{montufar2014} on ReLU linear regions. Original activation papers are \citet{he2015prelu}, \citet{clevert2015elu}, \citet{hendrycks2016gelu}, and \citet{ramachandran2017swish}. The explicit hinge, Boolean-match, and tent constructions in these notes make the relevant ideas inspectable without treating a citation as a substitute for reasoning.
